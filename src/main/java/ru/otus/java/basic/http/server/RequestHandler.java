@@ -1,5 +1,9 @@
 package ru.otus.java.basic.http.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.otus.java.basic.http.server.app.ItemsRepository;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,13 +14,14 @@ public class RequestHandler implements Runnable {
     private final InputStream in;
     private final OutputStream out;
     private final Dispatcher dispatcher;
+    private final Logger logger;
 
-    public RequestHandler(Socket connection) throws IOException {
+    public RequestHandler(Socket connection, Dispatcher dispatcher) throws IOException {
         this.socket = connection;
         this.in = socket.getInputStream();
         this.out = socket.getOutputStream();
-        this.dispatcher = new Dispatcher();
-
+        this.dispatcher = dispatcher;
+        this.logger = LoggerFactory.getLogger(RequestHandler.class);
     }
 
     @Override
@@ -32,16 +37,14 @@ public class RequestHandler implements Runnable {
             request.printInfo(true);
             dispatcher.execute(request, out);
         } catch (IOException e) {
-            //todo: logger
-            e.printStackTrace();
+            logger.error(e.getMessage(), e);
         } finally {
             try {
                 in.close();
                 out.close();
                 socket.close();
             } catch (IOException e) {
-                //todo: logger
-                e.printStackTrace();
+                logger.error(e.getMessage(), e);
             }
         }
     }

@@ -3,15 +3,15 @@ package ru.otus.java.basic.http.server.app;
 import java.math.BigDecimal;
 
 public class Item {
-    private Long id;
+    private long id;
     private String title;
     private BigDecimal price;
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -31,7 +31,7 @@ public class Item {
         this.price = price;
     }
 
-    public Item(Long id, String title, BigDecimal price) {
+    public Item(long id, String title, BigDecimal price) {
         this.id = id;
         this.title = title;
         this.price = price;

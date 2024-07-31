@@ -1,5 +1,8 @@
 package ru.otus.java.basic.http.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,7 +11,9 @@ public class HttpRequest {
     private String uri;
     private HttpMethod method;
     private Map<String, String> parameters;
+    private Map<String, String> headers;
     private String body;
+    private final Logger logger;
 
     public String getRoutingKey() {
         return method + " " + uri;
@@ -22,7 +27,16 @@ public class HttpRequest {
         return body;
     }
 
+    public Map<String, String> getParameters() {
+        return parameters;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
     public HttpRequest(String rawRequest) {
+        this.logger = LoggerFactory.getLogger(HttpRequest.class);
         this.rawRequest = rawRequest;
         this.parse();
     }
@@ -33,6 +47,7 @@ public class HttpRequest {
         this.uri = rawRequest.substring(startIndex + 1, endIndex);
         this.method = HttpMethod.valueOf(rawRequest.substring(0, startIndex));
         this.parameters = new HashMap<>();
+        this.headers = new HashMap<>();
         if (uri.contains("?")) {
             String[] elements = uri.split("[?]");
             this.uri = elements[0];
@@ -47,6 +62,15 @@ public class HttpRequest {
                     rawRequest.indexOf("\r\n\r\n") + 4
             );
         }
+
+        int startHeadersIndex = rawRequest.indexOf('\n') + 1;
+        int endHeadersIndex = rawRequest.indexOf("\r\n\r\n", startHeadersIndex);
+
+        var rawHeaders = rawRequest.substring(startHeadersIndex, endHeadersIndex).split("\r\n");
+        for (String header : rawHeaders) {
+            var keyValue = header.split(": ");
+            headers.put(keyValue[0], keyValue[1]);
+        }
     }
 
     public boolean containsParameter(String key) {
@@ -58,11 +82,15 @@ public class HttpRequest {
     }
 
     public void printInfo(boolean showRawRequest) {
-        System.out.println("uri: " + uri);
-        System.out.println("method: " + method);
-        System.out.println("body: " + body);
+        StringBuilder sb = new StringBuilder();
+        sb.append("uri: ")
+                .append(uri).append(System.lineSeparator())
+                .append("method: ").append(method).append(System.lineSeparator())
+                .append("body: ").append(body).append(System.lineSeparator());
+
         if (showRawRequest) {
-            System.out.println(rawRequest);
+            sb.append(rawRequest);
         }
+        logger.info(sb.toString());
     }
 }

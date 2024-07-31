@@ -1,4 +1,4 @@
-package ru.otus.java.basic.http.server;
+package ru.otus.java.basic.http.server.app;
 
 import java.time.LocalDateTime;
 

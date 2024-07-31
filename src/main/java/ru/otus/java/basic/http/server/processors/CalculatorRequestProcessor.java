@@ -1,6 +1,6 @@
 package ru.otus.java.basic.http.server.processors;
 
-import ru.otus.java.basic.http.server.BadRequestException;
+import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import ru.otus.java.basic.http.server.HttpRequest;
 
 import java.io.IOException;

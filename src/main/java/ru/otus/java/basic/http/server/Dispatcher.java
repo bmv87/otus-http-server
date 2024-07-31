@@ -1,56 +1,46 @@
 package ru.otus.java.basic.http.server;
 
-import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.otus.java.basic.http.server.app.ItemsRepository;
+import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 import ru.otus.java.basic.http.server.processors.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Dispatcher {
     private final Map<String, RequestProcessor> processors;
-    private final RequestProcessor defaultNotFoundRequestProcessor;
-    private final RequestProcessor defaultInternalServerErrorProcessor;
+    private final ErrorProcessor serverErrorProcessor;
     private ItemsRepository itemsRepository;
+    private final Logger logger;
 
-    public Dispatcher() {
-        this.itemsRepository = new ItemsRepository();
+    public Dispatcher(ItemsRepository itemsRepository) {
+        this.itemsRepository = itemsRepository;
         this.processors = new HashMap<>();
         this.processors.put("GET /", new HelloWorldRequestProcessor());
         this.processors.put("GET /another", new AnotherHelloWorldRequestProcessor());
         this.processors.put("GET /calculator", new CalculatorRequestProcessor());
         this.processors.put("GET /items", new GetAllItemsProcessor(itemsRepository));
+        this.processors.put("GET /item", new GetItemProcessor(itemsRepository));
         this.processors.put("POST /items", new CreateNewItemProcessor(itemsRepository));
+        this.processors.put("DELETE /items", new DeleteItemProcessor(itemsRepository));
 
-
-        this.defaultNotFoundRequestProcessor = new DefaultNotFoundRequestProcessor();
-        this.defaultInternalServerErrorProcessor = new DefaultInternalServerErrorRequestProcessor();
+        this.serverErrorProcessor = new ServerErrorRequestProcessor();
+        this.logger = LoggerFactory.getLogger(Dispatcher.class);
     }
 
     public void execute(HttpRequest request, OutputStream out) throws IOException {
         try {
             if (!processors.containsKey(request.getRoutingKey())) {
-                defaultNotFoundRequestProcessor.execute(request, out);
-                return;
+                throw new NotFoundException("Route not exists");
             }
             processors.get(request.getRoutingKey()).execute(request, out);
-        } catch (BadRequestException e) {
-            //todo: logger
-            e.printStackTrace();
-            DefaultErrorDto defaultErrorDto = new DefaultErrorDto("CLIENT_DEFAULT_ERROR", e.getMessage());
-            String jsonError = new Gson().toJson(defaultErrorDto);
-            String response = "HTTP/1.1 400 Bad Request\r\n" +
-                    "Content-Type: application/json\r\n" +
-                    "\r\n" +
-                    jsonError;
-            out.write(response.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            //todo: logger
-            e.printStackTrace();
-            defaultInternalServerErrorProcessor.execute(request, out);
+            logger.error(e.getMessage(), e);
+            serverErrorProcessor.execute(request, e, out);
         }
     }
 }
