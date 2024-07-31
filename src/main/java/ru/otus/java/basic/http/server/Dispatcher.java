@@ -9,9 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Dispatcher {
-    private Map<String, RequestProcessor> processors;
-    private RequestProcessor defaultNotFoundRequestProcessor;
-    private RequestProcessor defaultInternalServerErrorProcessor;
+    private final Map<String, RequestProcessor> processors;
+    private final RequestProcessor defaultNotFoundRequestProcessor;
+    private final RequestProcessor defaultInternalServerErrorProcessor;
 
     public Dispatcher() {
         this.processors = new HashMap<>();
@@ -31,14 +31,15 @@ public class Dispatcher {
             }
             processors.get(request.getUri()).execute(request, out);
         } catch (BadRequestException e) {
+            //todo: logger
             e.printStackTrace();
-            String response = "" +
-                    "HTTP/1.1 400 Bad Request\r\n" +
+            String response = "HTTP/1.1 400 Bad Request\r\n" +
                     "Content-Type: text/html\r\n" +
                     "\r\n" +
                     "<html><body><h1>" + e.getMessage() + "</h1></body></html>";
             out.write(response.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
+            //todo: logger
             e.printStackTrace();
             defaultInternalServerErrorProcessor.execute(request, out);
         }
