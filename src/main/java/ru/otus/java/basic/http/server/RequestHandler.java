@@ -24,6 +24,9 @@ public class RequestHandler implements Runnable {
         try {
             byte[] buffer = new byte[8192];
             int n = in.read(buffer);
+            if (n < 1) {
+                return;
+            }
             String rawRequest = new String(buffer, 0, n);
             HttpRequest request = new HttpRequest(rawRequest);
             request.printInfo(true);
