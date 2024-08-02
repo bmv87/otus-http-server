@@ -13,23 +13,22 @@ import java.util.concurrent.Executors;
 public class HttpServer implements AutoCloseable {
     private final int port;
     private final ExecutorService clientPool = Executors.newCachedThreadPool();
-    private final Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(HttpServer.class);
 
     public HttpServer(int port) {
         this.port = port;
-        this.logger = LoggerFactory.getLogger(HttpServer.class);
     }
 
     public void start() {
-       var dispatcher = new Dispatcher(new ItemsRepository()) ;
+        var dispatcher = new Dispatcher(new ItemsRepository());
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            logger.info("Сервер запущен на порту: " + port);
+            logger.info("Сервер запущен на порту: {}", port);
             while (!serverSocket.isClosed() && !Thread.currentThread().isInterrupted()) {
                 Socket socket = serverSocket.accept();
                 clientPool.submit(new RequestHandler(socket, dispatcher));
             }
         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
+            logger.error("Ошибка запуска сервере или ожидания подключения.", e);
             clientPool.shutdown();
         }
     }

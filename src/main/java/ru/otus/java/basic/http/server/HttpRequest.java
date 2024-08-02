@@ -13,7 +13,7 @@ public class HttpRequest {
     private Map<String, String> parameters;
     private Map<String, String> headers;
     private String body;
-    private final Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(HttpRequest.class);
 
     public String getRoutingKey() {
         return method + " " + uri;
@@ -36,7 +36,6 @@ public class HttpRequest {
     }
 
     public HttpRequest(String rawRequest) {
-        this.logger = LoggerFactory.getLogger(HttpRequest.class);
         this.rawRequest = rawRequest;
         this.parse();
     }
@@ -68,7 +67,7 @@ public class HttpRequest {
 
         var rawHeaders = rawRequest.substring(startHeadersIndex, endHeadersIndex).split("\r\n");
         for (String header : rawHeaders) {
-            var keyValue = header.split(": ");
+            var keyValue = header.split(": ", 2);
             headers.put(keyValue[0], keyValue[1]);
         }
     }
@@ -81,16 +80,14 @@ public class HttpRequest {
         return parameters.get(key);
     }
 
-    public void printInfo(boolean showRawRequest) {
+    public void printInfo() {
         StringBuilder sb = new StringBuilder();
-        sb.append("uri: ")
-                .append(uri).append(System.lineSeparator())
+        sb.append(System.lineSeparator())
+                .append("uri: ").append(uri).append(System.lineSeparator())
                 .append("method: ").append(method).append(System.lineSeparator())
                 .append("body: ").append(body).append(System.lineSeparator());
 
-        if (showRawRequest) {
-            sb.append(rawRequest);
-        }
         logger.info(sb.toString());
+        logger.debug("{}{}", System.lineSeparator(), rawRequest);
     }
 }

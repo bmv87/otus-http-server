@@ -14,11 +14,9 @@ import java.util.Map;
 public class Dispatcher {
     private final Map<String, RequestProcessor> processors;
     private final ErrorProcessor serverErrorProcessor;
-    private ItemsRepository itemsRepository;
-    private final Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(Dispatcher.class);
 
     public Dispatcher(ItemsRepository itemsRepository) {
-        this.itemsRepository = itemsRepository;
         this.processors = new HashMap<>();
         this.processors.put("GET /", new HelloWorldRequestProcessor());
         this.processors.put("GET /another", new AnotherHelloWorldRequestProcessor());
@@ -29,7 +27,6 @@ public class Dispatcher {
         this.processors.put("DELETE /items", new DeleteItemProcessor(itemsRepository));
 
         this.serverErrorProcessor = new ServerErrorRequestProcessor();
-        this.logger = LoggerFactory.getLogger(Dispatcher.class);
     }
 
     public void execute(HttpRequest request, OutputStream out) throws IOException {
@@ -39,7 +36,7 @@ public class Dispatcher {
             }
             processors.get(request.getRoutingKey()).execute(request, out);
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            logger.error("Сервер попытался выполнить недопустимую операцию.", e);
             serverErrorProcessor.execute(request, e, out);
         }
     }

@@ -10,7 +10,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class DeleteItemProcessor implements RequestProcessor {
-    private ItemsRepository itemsRepository;
+    private final ItemsRepository itemsRepository;
 
     public DeleteItemProcessor(ItemsRepository itemsRepository) {
         this.itemsRepository = itemsRepository;
@@ -20,7 +20,7 @@ public class DeleteItemProcessor implements RequestProcessor {
     public void execute(HttpRequest request, OutputStream out) throws IOException {
         try {
             var params = request.getParameters();
-            if (params.isEmpty() || !params.containsKey("id")) {
+            if (!params.containsKey("id")) {
                 throw new BadRequestException("Не указан id.");
             }
             itemsRepository.delete(Long.parseLong(params.get("id")));
